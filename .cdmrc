@@ -1,0 +1,9 @@
+tabs: ['/client/src/App.jsx', '/server/index.js']
+terminal-one: |
+  cd client
+
+
+terminal-two: |
+  cd server
+  yarn run start-server
+
