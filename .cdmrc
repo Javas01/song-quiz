@@ -1,4 +1,4 @@
-tabs: ['client/pages/index.js', 'server/index.js']
+tabs: ['README.md']
 terminal-one: cd client && yarn && yarn dev
-live-reload-browser: false
 terminal-two: cd server && yarn && yarn dev
+live-reload-browser: false
