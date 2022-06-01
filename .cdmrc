@@ -1,16 +1,4 @@
-tabs: ['client/src/App.jsx', 'server/index.js']
-terminal-one: |
-  cd client
-  yarn install
-  yarn dev
-  
+tabs: ['client/pages/index.js', 'server/index.js']
+terminal-one: cd client && yarn && yarn dev
 defaultView: terminal-editor-browser
-baseImage: react-vite
-
-terminal-two: |
-  cd server
-  yarn install
-  yarn run start-server
-
-terminal-three: |
-  mongod
+terminal-two: cd server && yarn && yarn dev
