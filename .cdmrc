@@ -1,4 +1,4 @@
 tabs: ['client/pages/index.js', 'server/index.js']
 terminal-one: cd client && yarn && yarn dev
-defaultView: terminal-editor-browser
+live-reload-browser: false
 terminal-two: cd server && yarn && yarn dev
