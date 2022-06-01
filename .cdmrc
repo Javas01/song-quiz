@@ -1,4 +1,4 @@
-tabs: ['/client/src/App.jsx', '/server/index.js']
+tabs: ['client/src/App.jsx', 'server/index.js']
 terminal-one: |
   cd client
   yarn install
