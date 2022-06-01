@@ -1,9 +1,12 @@
 tabs: ['/client/src/App.jsx', '/server/index.js']
 terminal-one: |
   cd client
+  yarn install
+  yarn dev
 
 
 terminal-two: |
   cd server
+  yarn install
   yarn run start-server
 
