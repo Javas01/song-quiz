@@ -2,5 +2,3 @@ tabs: ['README.md']
 terminal-one: cd client && yarn && yarn dev
 terminal-two: cd server && yarn && yarn dev
 live-reload-browser: false
-defaultView: terminal-editor-browser
-baseImage: html
