@@ -4,8 +4,15 @@
 	"main": "index.js",
 	"license": "MIT",
 	"dependencies": {
+		"@emotion/react": "^11.9.0",
+		"@emotion/styled": "^11.8.1",
+		"@mui/material": "^5.8.2",
+		"axios": "^0.27.2",
+		"cors": "^2.8.5",
+		"dotenv": "^16.0.1",
 		"express": "^4.18.1",
-		"nodemon": "^2.0.16"
+		"nodemon": "^2.0.16",
+		"qs": "^6.10.3"
 	},
 	"scripts": {
 		"dev": "nodemon index.js"
