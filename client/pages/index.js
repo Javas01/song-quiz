@@ -101,7 +101,7 @@ export default function Home() {
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && getSongs(e.target.value)}
               />
-              <Button variant='contained' id='submit' onClick={getSongs}>
+              <Button variant='contained' id='submit' onClick={() => getSongs()}>
                 Search
               </Button>
             </Card>
@@ -123,7 +123,7 @@ export default function Home() {
                     sx={{ flexGrow: 1, borderRadius: '15px' }}
                     component='img'
                     image={artist.imgSrc}
-                    alt='Live from space album cover'
+                    alt='artist image'
                   />
                   <div className={styles.audioWrapper}>
                     <audio
@@ -151,7 +151,7 @@ export default function Home() {
                     variant='contained'
                     id='submit'
                     disabled={disableGuess}
-                    onClick={checkGuess}
+                    onClick={() => checkGuess()}
                   >
                     Guess
                   </Button>
