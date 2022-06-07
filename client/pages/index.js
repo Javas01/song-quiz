@@ -1,19 +1,7 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import styles from '../styles/Home.module.css';
-import * as React from 'react';
-import {
-  Button,
-  Icon,
-  TextField,
-  Card,
-  CardMedia,
-  Container,
-  Box,
-  CardContent,
-  Typography,
-  IconButton,
-  useTheme,
-} from '@mui/material';
+import SongQuiz from '../components/SongQuiz';
+import { Button, TextField, Card, Container, Typography } from '@mui/material';
 
 export default function Home() {
   const [artist, setArtist] = useState();
@@ -22,8 +10,9 @@ export default function Home() {
   const [search, setSearch] = useState('');
   const [guess, setGuess] = useState('');
   const [disableGuess, setDisableGuess] = useState(false);
+  const [verse, setVerse] = useState('');
+  const [type, setType] = useState('song quiz');
   const audioRef = useRef();
-  const theme = useTheme();
 
   const trimString = (s) => {
     var n = s.indexOf('(');
@@ -47,25 +36,37 @@ export default function Home() {
     }
   };
 
+  const getLyrics = async (artistName, songName) => {
+    const response = await fetch(
+      `https://api.lyrics.ovh/v1/${artistName}/${trimString(songName)}`
+    );
+    const data = await response.json();
+    const lyrics = data.lyrics?.split('\n').filter((str) => str.length > 0) ?? [''];
+    console.log(lyrics);
+    const randomNum = Math.floor(Math.random() * lyrics.length);
+    setVerse(lyrics);
+  };
+
   const getSongs = async (_search) => {
     const response = await fetch(
       `http://localhost:1338/api/${_search ?? search}`
     );
     const data = await response.json();
     const filteredSongs = data.songs.filter((song) => Boolean(song.url));
-    console.log(filteredSongs);
-    console.log(data.artist);
     if (filteredSongs.length === 0) {
       alert(`no songs found for ${data.artist.name}`);
       return;
     }
+
+    getLyrics(data.artist.name, filteredSongs[0].name);
     setPlaylist(filteredSongs);
     setArtist(data.artist);
     updateSong(true);
   };
   const nextSong = async () => {
     updateSong();
-    audioRef.current.controls = false;
+    getLyrics(artist.name, playlist[currSong].name);
+    if (audioRef.current) audioRef.current.controls = false;
   };
   const checkGuess = async (_guess) => {
     const answer = trimString(playlist[currSong].name);
@@ -76,10 +77,13 @@ export default function Home() {
     else if (guess === '')
       alert(`You didn't even try! The answer is ${playlist[currSong].name}`);
     else alert(`Wrong. The right answer is ${playlist[currSong].name}`);
-    audioRef.current.controls = true;
-    audioRef.current.play();
+    if (audioRef.current) {
+      audioRef.current.controls = true;
+      audioRef.current.play();
+    }
   };
-  const startOver = () => {
+  const startOver = (quizType) => {
+    quizType && setType(quizType);
     setPlaylist([]);
     setGuess('');
     setSearch('');
@@ -89,9 +93,22 @@ export default function Home() {
     <Container>
       <div className={styles.container}>
         <main className={styles.main}>
-          <Button variant='contained' onClick={startOver}>
-            Welcome to Song Quizzer!
-          </Button>
+          <div style={{ display: 'flex' }}>
+            <Button
+              style={{ margin: '0 1rem' }}
+              variant='contained'
+              onClick={() => startOver('song quiz')}
+            >
+              Song Quiz
+            </Button>
+            <Button
+              style={{ margin: '0 1rem' }}
+              variant='contained'
+              onClick={() => startOver('lyric quiz')}
+            >
+              Lyrics Quiz
+            </Button>
+          </div>
           {playlist.length === 0 && (
             <Card className={styles.search}>
               <TextField
@@ -101,41 +118,34 @@ export default function Home() {
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && getSongs(e.target.value)}
               />
-              <Button variant='contained' id='submit' onClick={() => getSongs()}>
+              <Button
+                variant='contained'
+                id='submit'
+                onClick={() => getSongs()}
+              >
                 Search
               </Button>
             </Card>
           )}
           <>
             {!!playlist.length && (
-              <div>
-                <div className={styles.songCard}>
-                  <CardContent>
-                    <Typography
-                      sx={{ display: 'flex', justifyContent: 'center' }}
-                      component='div'
-                      variant='h3'
-                    >
-                      {artist.name}
-                    </Typography>
-                  </CardContent>
-                  <CardMedia
-                    sx={{ flexGrow: 1, borderRadius: '15px' }}
-                    component='img'
-                    image={artist.imgSrc}
-                    alt='artist image'
+              <>
+                {type === 'song quiz' ? (
+                  <SongQuiz
+                    artist={artist}
+                    onTimeUpdate={onTimeUpdate}
+                    audioRef={audioRef}
+                    currentSong={playlist[currSong]}
                   />
-                  <div className={styles.audioWrapper}>
-                    <audio
-                      onTimeUpdate={onTimeUpdate}
-                      id='myVideo'
-                      autoPlay
-                      ref={audioRef}
-                    >
-                      <source src={playlist[currSong].url} type='audio/mpeg' />
-                    </audio>
-                  </div>
-                </div>
+                ) : (
+                  <Typography
+                    sx={{ display: 'flex', justifyContent: 'center' }}
+                    component='div'
+                    variant='h5'
+                  >
+                    {verse.join(' ')}
+                  </Typography>
+                )}
                 <div className={styles.guessForm}>
                   <TextField
                     sx={{ flexGrow: 4 }}
@@ -145,7 +155,9 @@ export default function Home() {
                     value={guess}
                     disabled={disableGuess}
                     onChange={(e) => setGuess(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && checkGuess(e.target.value)}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && checkGuess(e.target.value)
+                    }
                   />
                   <Button
                     variant='contained'
@@ -169,7 +181,7 @@ export default function Home() {
                       : 'Skip Song'}
                   </Button>
                 </div>
-              </div>
+              </>
             )}
           </>
         </main>
