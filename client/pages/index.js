@@ -1,7 +1,14 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import styles from '../styles/Home.module.css';
 import SongQuiz from '../components/SongQuiz';
-import { Button, TextField, Card, Container, Typography } from '@mui/material';
+import {
+  Button,
+  TextField,
+  Card,
+  CardMedia,
+  Container,
+  Typography,
+} from '@mui/material';
 
 export default function Home() {
   const [artist, setArtist] = useState();
@@ -11,7 +18,8 @@ export default function Home() {
   const [guess, setGuess] = useState('');
   const [disableGuess, setDisableGuess] = useState(false);
   const [verse, setVerse] = useState('');
-  const [type, setType] = useState('song quiz');
+  const [type, setType] = useState('song');
+  const [correctLyric, setCorrectLyric] = useState('');
   const audioRef = useRef();
 
   const trimString = (s) => {
@@ -36,15 +44,27 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    if (playlist.length) getLyrics(artist.name, playlist[currSong].name);
+  }, [artist, playlist, currSong]);
+
   const getLyrics = async (artistName, songName) => {
     const response = await fetch(
-      `https://api.lyrics.ovh/v1/${artistName}/${trimString(songName)}`
+      `https://api.lyrics.ovh/v1/${artistName}/${songName}`
     );
     const data = await response.json();
-    const lyrics = data.lyrics?.split('\n').filter((str) => str.length > 0) ?? [''];
-    console.log(lyrics);
-    const randomNum = Math.floor(Math.random() * lyrics.length);
-    setVerse(lyrics);
+    const lyrics = data.lyrics?.split('\n').filter((str) => str.length > 0);
+    if (!lyrics) {
+      nextSong();
+      return;
+    }
+    const snippet = [lyrics[6], lyrics[7], lyrics[8]].join(' ');
+    let snippetArr = snippet.split(' ');
+    const randomNum = Math.floor(Math.random() * snippetArr.length);
+    console.log(snippetArr);
+    setCorrectLyric(snippetArr[randomNum]);
+    snippetArr[randomNum] = '_______';
+    setVerse(snippetArr.join(' '));
   };
 
   const getSongs = async (_search) => {
@@ -58,28 +78,37 @@ export default function Home() {
       return;
     }
 
-    getLyrics(data.artist.name, filteredSongs[0].name);
     setPlaylist(filteredSongs);
     setArtist(data.artist);
     updateSong(true);
   };
   const nextSong = async () => {
     updateSong();
-    getLyrics(artist.name, playlist[currSong].name);
     if (audioRef.current) audioRef.current.controls = false;
   };
   const checkGuess = async (_guess) => {
-    const answer = trimString(playlist[currSong].name);
-    setDisableGuess(true);
-    const check = _guess ?? guess;
-    if (check.toLowerCase() === answer.toLowerCase())
-      alert(`Correct! The song is ${playlist[currSong].name}`);
-    else if (guess === '')
-      alert(`You didn't even try! The answer is ${playlist[currSong].name}`);
-    else alert(`Wrong. The right answer is ${playlist[currSong].name}`);
-    if (audioRef.current) {
-      audioRef.current.controls = true;
-      audioRef.current.play();
+    if (type === 'song') {
+      const correctSong = trimString(playlist[currSong].name);
+      setDisableGuess(true);
+      const songGuess = _guess ?? guess;
+      if (songGuess.toLowerCase() === correctSong.toLowerCase())
+        alert(`Correct! The song is ${playlist[currSong].name}`);
+      else if (guess === '')
+        alert(`You didn't even try! The answer is ${playlist[currSong].name}`);
+      else alert(`Wrong. The right answer is ${playlist[currSong].name}`);
+      if (audioRef.current) {
+        audioRef.current.controls = true;
+        audioRef.current.play();
+      }
+    } else {
+      setDisableGuess(true);
+      const lyricGuess = _guess ?? guess;
+      const lyricAnswer = correctLyric.replace(/[^a-zA-Z0-9 ]/g, '')
+      if (lyricGuess.toLowerCase() === lyricAnswer.toLowerCase())
+        alert(`Correct! The Lyric is ${lyricAnswer}`);
+      else if (guess === '')
+        alert(`You didn't even try! The lyric is ${lyricAnswer}`);
+      else alert(`Wrong. The right answer is ${lyricAnswer}`);
     }
   };
   const startOver = (quizType) => {
@@ -96,15 +125,15 @@ export default function Home() {
           <div style={{ display: 'flex' }}>
             <Button
               style={{ margin: '0 1rem' }}
-              variant='contained'
-              onClick={() => startOver('song quiz')}
+              variant={type === 'song' ? 'contained' : 'text'}
+              onClick={() => startOver('song')}
             >
               Song Quiz
             </Button>
             <Button
               style={{ margin: '0 1rem' }}
-              variant='contained'
-              onClick={() => startOver('lyric quiz')}
+              variant={type === 'lyric' ? 'contained' : 'text'}
+              onClick={() => startOver('lyric')}
             >
               Lyrics Quiz
             </Button>
@@ -130,7 +159,7 @@ export default function Home() {
           <>
             {!!playlist.length && (
               <>
-                {type === 'song quiz' ? (
+                {type === 'song' ? (
                   <SongQuiz
                     artist={artist}
                     onTimeUpdate={onTimeUpdate}
@@ -138,20 +167,30 @@ export default function Home() {
                     currentSong={playlist[currSong]}
                   />
                 ) : (
-                  <Typography
-                    sx={{ display: 'flex', justifyContent: 'center' }}
-                    component='div'
-                    variant='h5'
-                  >
-                    {verse.join(' ')}
-                  </Typography>
+                  <div className={styles.songCard}>
+                    <CardMedia
+                      sx={{ flexGrow: 1, borderRadius: '15px' }}
+                      component='img'
+                      image={artist.imgSrc}
+                      alt='artist image'
+                    />
+                    <Typography
+                      sx={{ display: 'flex', justifyContent: 'center' }}
+                      component='div'
+                      variant='h5'
+                    >
+                      {verse}
+                    </Typography>
+                  </div>
                 )}
                 <div className={styles.guessForm}>
                   <TextField
                     sx={{ flexGrow: 4 }}
                     type='text'
                     id='guess'
-                    placeholder='Guess The Song!'
+                    placeholder={`Guess The ${
+                      type === 'song' ? 'Song' : 'Lyric'
+                    }!`}
                     value={guess}
                     disabled={disableGuess}
                     onChange={(e) => setGuess(e.target.value)}
