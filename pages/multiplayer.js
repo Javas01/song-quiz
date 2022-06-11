@@ -19,6 +19,9 @@ import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import PauseIcon from '@mui/icons-material/Pause';
 import Link from 'next/link';
 
+const server =
+  'https://song-quiz-api.herokuapp.com/api/' || 'http://localhost:1338/api/';
+
 export default function Home() {
   const socket = useContext(SocketContext);
   const [loading, setLoading] = useState(false);
@@ -45,9 +48,9 @@ export default function Home() {
       console.log(player.id);
       if (player.id === socketId) return { ...player, score: player.score + 1 };
       else {
-        setSeverity('error')
-        return player
-      };
+        setSeverity('error');
+        return player;
+      }
     });
     setPlayers(newScores);
     setAlertMsg(`${socketId} got it right`);
@@ -152,9 +155,7 @@ export default function Home() {
   const getSongs = async (_search) => {
     setLoading(true);
 
-    const response = await fetch(
-      `http://localhost:1338/api/${_search ?? search}`
-    );
+    const response = await fetch(`${server}${_search ?? search}`);
     const data = await response.json();
     const filteredSongs = data.songs.filter((song) => Boolean(song.url));
     if (filteredSongs.length === 0) {
