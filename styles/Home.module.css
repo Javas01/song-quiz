@@ -7,6 +7,15 @@
 	align-items: top;
 	/*height: 100vh; */
 }
+.scoreBoard {
+	display: flex;
+}
+.scoreBoard div {
+	border: 5px #1976d2 double;
+	width: 100px;
+	display: flex;
+	justify-content: center;
+}
 
 .main {
 	padding: 2rem 0;
@@ -50,9 +59,7 @@
 .audioWrapper {
 	display: flex;
 	justify-content: center;
-}
-.audioWrapper audio {
-	width: 90%;
+	margin-bottom: 2rem;
 }
 
 .footer a {

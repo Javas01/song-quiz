@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 import styles from '../styles/Home.module.css';
-import SongQuiz from '../components/SongQuiz';
 import {
   Button,
   TextField,
@@ -8,9 +7,18 @@ import {
   CardMedia,
   Container,
   Typography,
+  CircularProgress,
+  Box,
+  IconButton,
 } from '@mui/material';
+import ReplayIcon from '@mui/icons-material/Replay';
+import PlayCircleIcon from '@mui/icons-material/PlayCircle';
+import PauseIcon from '@mui/icons-material/Pause';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
+import Link from 'next/link';
 
 export default function Home() {
+  const [loading, setLoading] = useState(false);
   const [artist, setArtist] = useState();
   const [playlist, setPlaylist] = useState([]);
   const [currSong, setCurrSong] = useState(0);
@@ -20,6 +28,8 @@ export default function Home() {
   const [verse, setVerse] = useState('');
   const [type, setType] = useState('song');
   const [correctLyric, setCorrectLyric] = useState('');
+  const [isPaused, setIsPaused] = useState(false);
+  const [showPlayButton, setShowPlayButton] = useState(true);
   const audioRef = useRef();
 
   const trimString = (s) => {
@@ -30,7 +40,14 @@ export default function Home() {
   const onTimeUpdate = (e) => {
     if (disableGuess === false && e.target.currentTime >= 10) {
       e.target.pause();
-    }
+      setShowPlayButton(false);
+    } else setShowPlayButton(true);
+  };
+  const pause = (e) => {
+    setIsPaused(true);
+  };
+  const play = (e) => {
+    setIsPaused(false);
   };
 
   const updateSong = (resetCount) => {
@@ -45,8 +62,20 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (playlist.length) getLyrics(artist.name, playlist[currSong].name);
-  }, [artist, playlist, currSong]);
+    if (type === 'song') return;
+    if (!playlist.length) return;
+    if (currSong >= playlist.length) {
+      alert('No song lyrics found');
+      startOver();
+    } else getLyrics(artist.name, playlist[currSong].name);
+  }, [currSong, playlist]);
+
+  useEffect(() => {
+    type === 'lyric' && verse && setLoading(false);
+  }, [verse]);
+  useEffect(() => {
+    type === 'song' && playlist.length && setLoading(false);
+  }, [playlist, currSong]);
 
   const getLyrics = async (artistName, songName) => {
     const response = await fetch(
@@ -68,6 +97,8 @@ export default function Home() {
   };
 
   const getSongs = async (_search) => {
+    setLoading(true);
+
     const response = await fetch(
       `http://localhost:1338/api/${_search ?? search}`
     );
@@ -75,6 +106,7 @@ export default function Home() {
     const filteredSongs = data.songs.filter((song) => Boolean(song.url));
     if (filteredSongs.length === 0) {
       alert(`no songs found for ${data.artist.name}`);
+      setLoading(false);
       return;
     }
 
@@ -83,6 +115,7 @@ export default function Home() {
     updateSong(true);
   };
   const nextSong = async () => {
+    setLoading(true);
     updateSong();
     if (audioRef.current) audioRef.current.controls = false;
   };
@@ -103,7 +136,7 @@ export default function Home() {
     } else {
       setDisableGuess(true);
       const lyricGuess = _guess ?? guess;
-      const lyricAnswer = correctLyric.replace(/[^a-zA-Z0-9 ]/g, '')
+      const lyricAnswer = correctLyric.replace(/[^a-zA-Z0-9 ]/g, '');
       if (lyricGuess.toLowerCase() === lyricAnswer.toLowerCase())
         alert(`Correct! The Lyric is ${lyricAnswer}`);
       else if (guess === '')
@@ -116,6 +149,8 @@ export default function Home() {
     setPlaylist([]);
     setGuess('');
     setSearch('');
+    setArtist(null);
+    setVerse('');
   };
 
   return (
@@ -137,8 +172,11 @@ export default function Home() {
             >
               Lyrics Quiz
             </Button>
+            <Link href='/multiplayer'>
+              <Button style={{ margin: '0 1rem' }}>Multiplayer</Button>
+            </Link>
           </div>
-          {playlist.length === 0 && (
+          {playlist.length === 0 && !loading && (
             <Card className={styles.search}>
               <TextField
                 id='search'
@@ -157,31 +195,91 @@ export default function Home() {
             </Card>
           )}
           <>
-            {!!playlist.length && (
+            {artist && (
+              <div className={styles.songCard}>
+                <Typography
+                  sx={{ display: 'flex', justifyContent: 'center' }}
+                  component='div'
+                  variant='h3'
+                >
+                  {artist.name}
+                </Typography>
+                <CardMedia
+                  sx={{
+                    flexGrow: 1,
+                    borderRadius: '15px',
+                    maxWidth: '500px',
+                    marginTop: '2rem',
+                  }}
+                  component='img'
+                  image={artist.imgSrc}
+                  alt='artist image'
+                />
+              </div>
+            )}
+            {loading && (
+              <Box sx={{ display: 'flex' }}>
+                <CircularProgress />
+              </Box>
+            )}
+            {playlist.length > 0 && !loading && (
               <>
                 {type === 'song' ? (
-                  <SongQuiz
-                    artist={artist}
-                    onTimeUpdate={onTimeUpdate}
-                    audioRef={audioRef}
-                    currentSong={playlist[currSong]}
-                  />
-                ) : (
-                  <div className={styles.songCard}>
-                    <CardMedia
-                      sx={{ flexGrow: 1, borderRadius: '15px' }}
-                      component='img'
-                      image={artist.imgSrc}
-                      alt='artist image'
-                    />
-                    <Typography
-                      sx={{ display: 'flex', justifyContent: 'center' }}
-                      component='div'
-                      variant='h5'
+                  <div className={styles.audioWrapper}>
+                    <IconButton
+                      onClick={() => {
+                        if (audioRef.current.paused) {
+                          audioRef.current.currentTime = 0;
+                          audioRef.current.play();
+                        } else audioRef.current.currentTime = 0;
+                      }}
+                      aria-label='replay'
                     >
-                      {verse}
-                    </Typography>
+                      <ReplayIcon />
+                    </IconButton>
+                    {isPaused ? (
+                      <>
+                        {showPlayButton && (
+                          <IconButton
+                            onClick={() => audioRef.current.play()}
+                            aria-label='play'
+                          >
+                            <PlayCircleIcon />
+                          </IconButton>
+                        )}
+                      </>
+                    ) : (
+                      <IconButton
+                        onClick={() => audioRef.current.pause()}
+                        aria-label='pause'
+                      >
+                        <PauseIcon />
+                      </IconButton>
+                    )}
+                    {!(currSong === playlist.length - 1) && (
+                      <IconButton onClick={nextSong} aria-label='skip'>
+                        <SkipNextIcon />
+                      </IconButton>
+                    )}
+                    <audio
+                      onTimeUpdate={onTimeUpdate}
+                      onPause={pause}
+                      onPlay={play}
+                      id='songAudio'
+                      autoPlay
+                      ref={audioRef}
+                    >
+                      <source src={playlist[currSong].url} type='audio/mpeg' />
+                    </audio>
                   </div>
+                ) : (
+                  <Typography
+                    sx={{ display: 'flex', justifyContent: 'center' }}
+                    component='div'
+                    variant='h5'
+                  >
+                    {verse}
+                  </Typography>
                 )}
                 <div className={styles.guessForm}>
                   <TextField
@@ -209,9 +307,11 @@ export default function Home() {
                   <Button
                     variant='contained'
                     id='next'
-                    onClick={
-                      currSong === playlist.length - 1 ? startOver : nextSong
-                    }
+                    onClick={() => {
+                      currSong === playlist.length - 1
+                        ? startOver()
+                        : nextSong();
+                    }}
                   >
                     {currSong === playlist.length - 1
                       ? 'Start Over'
