@@ -18,8 +18,12 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import PauseIcon from '@mui/icons-material/Pause';
 import Link from 'next/link';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 
-const serverUrl = 'https://song-quiz-api.herokuapp.com/api/' 
+const serverUrl = 'https://song-quiz-api.herokuapp.com/api/'
 // const serverUrl = 'http://localhost:1338/api/';
 
 export default function Home() {
@@ -42,6 +46,15 @@ export default function Home() {
   const [players, setPlayers] = useState([]);
   const [alertMsg, setAlertMsg] = useState('');
   const audioRef = useRef();
+  const [playerDisplayName, setPlayerDisplayName] = useState("Player");
+
+  const [openDialog, setOpenDialog] = useState(false);
+  const handleClickOpen = () => {
+    setOpenDialog(true);
+  };
+  const handleClose = () => {
+    setOpenDialog(false);
+  }
 
   const handleCorrectAnswer = (socketId) => {
     const newScores = players.map((player) => {
@@ -140,10 +153,12 @@ export default function Home() {
   const createRoom = (_search) => {
     socket.emit('joinRoom', _search ?? search);
     setCurrRoom(_search ?? search);
+    handleClickOpen();
   };
   const joinRoom = (room) => {
     socket.emit('joinRoom', room);
     setCurrRoom(room);
+    handleClickOpen();
   };
   const nextSong = async () => {
     setLoading(true);
@@ -197,6 +212,26 @@ export default function Home() {
     <Container>
       <div className={styles.container}>
         <main className={styles.main}>
+          <Dialog open={openDialog} onClose={handleClose}>
+            <DialogTitle>Enter Your Player Name</DialogTitle>
+            <DialogContent>
+              <TextField
+                autoFocus
+                margin="dense"
+                id="EnteredDisplayName"
+                label="Name"
+                type="email"
+                fullWidth
+                variant="standard"
+                value={playerDisplayName}
+                onChange={(e) => setPlayerDisplayName(e.target.value)}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose}>Cancel</Button>
+              <Button onClick={handleClose}>Save</Button>
+            </DialogActions>
+          </Dialog>
           <div style={{ display: 'flex' }}>
             <Link href='/'>
               <Button style={{ margin: '0 1rem' }} variant={'text'}>
@@ -238,7 +273,7 @@ export default function Home() {
                 component='div'
                 variant='h5'
               >
-                {`room-name: ${currRoom} user-id: ${socket.id}`}
+                {`room-name: ${currRoom} user-id: ${playerDisplayName}`}
               </Typography>
               <Search
                 placeholder='Enter the Name of an Artist'
@@ -248,6 +283,23 @@ export default function Home() {
                 onClick={() => getSongs()}
                 buttonText='Search'
               />
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                {players.map((player, i) => {
+                  if (player.id === socket.id) {
+                    return (
+                      <div style={{ margin: '0 5px' }} key={i}>
+                        <h1>{playerDisplayName}</h1>
+                      </div>
+                    )
+                  } else {
+                    return (
+                      <div style={{ margin: '0 5px' }} key={i}>
+                        <h1>{"Player"}</h1>
+                      </div>
+                    )
+                  }
+                })}
+              </div>
               <div className={styles.scoreBoard}>
                 {players.map((player, i) => (
                   <div key={i}>
@@ -345,9 +397,7 @@ export default function Home() {
                     sx={{ flexGrow: 4 }}
                     type='text'
                     id='guess'
-                    placeholder={`Guess The ${
-                      type === 'song' ? 'Song' : 'Lyric'
-                    }!`}
+                    placeholder={`Guess The ${type === 'song' ? 'Song' : 'Lyric'}!`}
                     value={guess}
                     disabled={disableGuess}
                     onChange={(e) => setGuess(e.target.value)}
