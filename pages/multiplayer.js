@@ -53,6 +53,9 @@ export default function Home() {
     setOpenDialog(false);
     setPlayerDisplayName('Player');
   };
+  const handleSave = () => {
+    setOpenDialog(false);
+  };
 
   const handleCorrectAnswer = (socketId) => {
     const newScores = players.map((player) => {
@@ -228,7 +231,7 @@ export default function Home() {
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleClose}>Save</Button>
+              <Button onClick={handleSave}>Save</Button>
             </DialogActions>
           </Dialog>
           <div style={{ display: 'flex' }}>
