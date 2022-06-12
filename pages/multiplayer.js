@@ -57,9 +57,7 @@ export default function Home() {
     showSnackbar();
     setTimeout(nextSong, 5000);
   };
-  const handleGetRooms = (allRooms) => {
-    setRooms(allRooms);
-  };
+  const handleGetRooms = (allRooms) => setRooms(allRooms);
   const handlePlaylist = (songs, artist, playerIds) => {
     setPlaylist(songs);
     setArtist(artist);
@@ -81,7 +79,6 @@ export default function Home() {
   useEffect(() => {
     // as soon as the component is mounted, do the following tasks:
     // subscribe to socket events
-    socket.on('showCorrectAnswer', handleCorrectAnswer);
     socket.on('nextSong', nextSong);
     socket.on('allRooms', handleGetRooms);
     socket.on('playlist', handlePlaylist);
@@ -180,6 +177,8 @@ export default function Home() {
     setSearch('');
     setArtist(null);
     setVerse('');
+    setCurrRoom('');
+    socket.emit('leaveRoom', currRoom);
   };
 
   const showSnackbar = () => {
@@ -215,7 +214,7 @@ export default function Home() {
           {!currRoom ? (
             <>
               <div>
-                {Object.keys(rooms).map((roomName, ind) => (
+                {rooms.map((roomName, ind) => (
                   <Button key={ind} onClick={() => joinRoom(roomName)}>
                     {roomName}
                   </Button>
