@@ -3,7 +3,10 @@ import Head from 'next/head'
 import socketio from 'socket.io-client';
 import '../styles/globals.css';
 
-export const socket = socketio.connect('http://localhost:1338/');
+const serverUrl = 'https://song-quiz-api.herokuapp.com/api/' 
+// const serverUrl = 'http://localhost:1338/api/';
+
+export const socket = socketio.connect(serverUrl);
 export const SocketContext = React.createContext();
 
 function MyApp({ Component, pageProps }) {
