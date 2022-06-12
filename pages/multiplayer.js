@@ -166,7 +166,7 @@ export default function Home() {
     setLoading(true);
 
     const response = await fetch(
-      `${process.env.SERVER_URL}${_search ?? search}`
+      `${process.env.NEXT_PUBLIC_SERVER_URL}${_search ?? search}`
     );
     const data = await response.json();
     const filteredSongs = data.songs.filter((song) => Boolean(song.url));
