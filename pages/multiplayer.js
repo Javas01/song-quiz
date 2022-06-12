@@ -23,9 +23,6 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 
-const serverUrl = 'https://song-quiz-api.herokuapp.com/api/'
-// const serverUrl = 'http://localhost:1338/api/';
-
 export default function Home() {
   const socket = useContext(SocketContext);
   const [loading, setLoading] = useState(false);
@@ -46,7 +43,7 @@ export default function Home() {
   const [players, setPlayers] = useState([]);
   const [alertMsg, setAlertMsg] = useState('');
   const audioRef = useRef();
-  const [playerDisplayName, setPlayerDisplayName] = useState("Player");
+  const [playerDisplayName, setPlayerDisplayName] = useState('Player');
 
   const [openDialog, setOpenDialog] = useState(false);
   const handleClickOpen = () => {
@@ -54,7 +51,8 @@ export default function Home() {
   };
   const handleClose = () => {
     setOpenDialog(false);
-  }
+    setPlayerDisplayName('Player');
+  };
 
   const handleCorrectAnswer = (socketId) => {
     const newScores = players.map((player) => {
@@ -167,7 +165,9 @@ export default function Home() {
   const getSongs = async (_search) => {
     setLoading(true);
 
-    const response = await fetch(`${serverUrl}${_search ?? search}`);
+    const response = await fetch(
+      `${process.env.SERVER_URL}${_search ?? search}`
+    );
     const data = await response.json();
     const filteredSongs = data.songs.filter((song) => Boolean(song.url));
     if (filteredSongs.length === 0) {
@@ -217,18 +217,17 @@ export default function Home() {
             <DialogContent>
               <TextField
                 autoFocus
-                margin="dense"
-                id="EnteredDisplayName"
-                label="Name"
-                type="email"
+                margin='dense'
+                id='EnteredDisplayName'
+                label='Name'
+                type='email'
                 fullWidth
-                variant="standard"
+                variant='standard'
                 value={playerDisplayName}
                 onChange={(e) => setPlayerDisplayName(e.target.value)}
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={handleClose}>Cancel</Button>
               <Button onClick={handleClose}>Save</Button>
             </DialogActions>
           </Dialog>
@@ -290,13 +289,13 @@ export default function Home() {
                       <div style={{ margin: '0 5px' }} key={i}>
                         <h1>{playerDisplayName}</h1>
                       </div>
-                    )
+                    );
                   } else {
                     return (
                       <div style={{ margin: '0 5px' }} key={i}>
-                        <h1>{"Player"}</h1>
+                        <h1>{'Player'}</h1>
                       </div>
-                    )
+                    );
                   }
                 })}
               </div>
@@ -397,7 +396,9 @@ export default function Home() {
                     sx={{ flexGrow: 4 }}
                     type='text'
                     id='guess'
-                    placeholder={`Guess The ${type === 'song' ? 'Song' : 'Lyric'}!`}
+                    placeholder={`Guess The ${
+                      type === 'song' ? 'Song' : 'Lyric'
+                    }!`}
                     value={guess}
                     disabled={disableGuess}
                     onChange={(e) => setGuess(e.target.value)}

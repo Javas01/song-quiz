@@ -1,12 +1,9 @@
 import React from 'react';
-import Head from 'next/head'
+import Head from 'next/head';
 import socketio from 'socket.io-client';
 import '../styles/globals.css';
 
-const serverUrl = 'https://song-quiz-api.herokuapp.com/' 
-// const serverUrl = 'http://localhost:1338/';
-
-export const socket = socketio.connect(serverUrl);
+export const socket = socketio.connect(process.env.SERVER_URL);
 export const SocketContext = React.createContext();
 
 function MyApp({ Component, pageProps }) {
